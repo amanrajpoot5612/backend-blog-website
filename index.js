@@ -3,13 +3,20 @@ import mongoose from 'mongoose';
 import { configDotenv } from 'dotenv';
 import BlogRoute from './routes/blog.routes.js'
 import UserRoute from './routes/user.routes.js'
+import cors from 'cors';
+import { FRONTEND_URI , MONGODB_URI , PORT} from './api.js';
 configDotenv()
 const app = express()
-const PORT = 4000;
+
+
+app.use(cors({
+    origin: `${FRONTEND_URI}`,  // your frontend URL
+    credentials: true
+}));
 
 app.use(express.json())
 
-    mongoose.connect(`${process.env.MONGODB_URI}`)
+    mongoose.connect(`${MONGODB_URI}`)
     .then((i) => {
         app.listen(PORT ,() => {
         console.log(`App running: ${i}`);
@@ -20,8 +27,8 @@ app.use(express.json())
         console.log(`Error occured in db connection: ${e}`);
     })
 
-app.use('/api' ,BlogRoute )
-app.use('/api' ,UserRoute )
+app.use('/api/blog' ,BlogRoute )
+app.use('/api/user' ,UserRoute )
 
 app.get('/', (req, res) => {
     res.send(
