@@ -1,5 +1,8 @@
-const FRONTEND_URI = import.meta.env.VITE_FRONTEND_URI
-const MONGODB_URI = import.meta.env.VITE_MONGODB_URI
-const PORT = 4000
+import dotenv from 'dotenv';
+dotenv.config(); // Make sure to call this BEFORE accessing process.env
 
-export {FRONTEND_URI, MONGODB_URI, PORT};
+const FRONTEND_URI = process.env.FRONTEND_URI;
+const MONGODB_URI = process.env.MONGODB_URI;
+const PORT = process.env.PORT || 4000;
+
+export { FRONTEND_URI, MONGODB_URI, PORT };
