@@ -12,7 +12,7 @@ const blogSchema = new mongoose.Schema({
     author:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'user',
-        // required: true
+        required: true
     },
     createdAt:{
         type: Date,
@@ -20,5 +20,5 @@ const blogSchema = new mongoose.Schema({
     }
 })
 
-const Blog = mongoose.model('blog' , blogSchema);
+const Blog = mongoose.model('Blog' , blogSchema);
 export default Blog;
