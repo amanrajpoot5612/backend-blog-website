@@ -1,9 +1,101 @@
 import express from 'express'
+import User from '../model/user.schema.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken'
 
 const router = express.Router();
 
-router.get('/user' , async(req , res) => {
-    res.send("User route accessed")
+// user register route
+router.post('/register', async(req, res) => {
+    const {name , username , email , password} = req.body;
+    try {
+        if (!name || !username || !email || !password) {
+            return res.status(400).json({ error: "All fields are required" });
+        }
+        console.log("fields validity checked");
+        
+        const existingUser = await User.findOne({username});
+        if(existingUser){
+            return res.status(400).json({
+            error: "User already exists"
+        })
+        }
+        console.log("username uniqueness checked");
+
+        const hashedPassword =  await bcrypt.hash(password , 10);
+        
+        console.log("password hashed");
+
+        const newUser = new User({
+            name,
+            email,
+            password: hashedPassword,
+            username
+        })
+        await newUser.save();
+        res.status(201).json({
+            message: "user registered successfully"
+        })
+    } catch (error) {
+        res.status(500).json({
+            error: "Server error while registering user"
+        })
+    }
+})
+
+// user login route
+router.post('/login' , async(req, res) => {
+    const {email , password} = req.body;
+    try {
+        const user = await User.findOne({email})
+        if(!user){
+            return res.status(400).json({
+                error: "Invalid credentials"
+            })
+        }
+        console.log("user found in db");
+        
+        const isMatch = await bcrypt.compare(password , user.password);
+        if(!isMatch){
+            return res.status(400).json({
+                error: "Invalid password"
+            })
+        }
+        console.log("user password matched");
+        
+        const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {
+            expiresIn: "1d"
+        })
+
+        console.log("token generate");
+        
+        res.status(200).json({
+            token,
+            user: {_id: user._id , name: user.name , email: user.email , username: user.username}
+        })
+
+        console.log("response send");
+        
+
+        
+    } catch (error) {
+        res.status(500).json({
+            error: "login failed"
+        })
+    }
+})
+
+
+router.get('/profile' , async(req , res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password')
+        res.json(
+            user
+        )
+
+    } catch (error) {
+         res.status(500).json({ error: 'Failed to fetch user profile' });
+    }
 })
 
 export default router

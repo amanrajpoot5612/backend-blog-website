@@ -87,13 +87,24 @@ router.delete('/:id' , async(req, res,) => {
 //Edit blog
 
 router.put('/:id' ,async(req ,res) => {
+    const {title , content} = req.body;
     try {
-        const blog = await Blog.findByIdAndUpdate(req.params.id)
-        if(!blog){
-            res.status(400).json({
+        const updatedBlog = await Blog.findByIdAndUpdate(
+            req.params.id,
+            {title , content},
+            {new: true}
+        )
+
+        if(!updatedBlog){
+            return res.status(404).json({
             error: "Blog can't be fetched"
         })
         }
+        res.status(200)
+        .json({
+            message: "Blog updated successfully",
+            blog: updatedBlog
+        })
         
     } catch (error) {
         res.status(400).json({
