@@ -41,6 +41,8 @@ router.post('/register', async(req, res) => {
             "token" , token , {
                 httpOnly: true,
                 maxAge: 7 * 24 * 60 * 60 * 1000,
+                secure: true,             // ✅ only on HTTPS (Render uses HTTPS)
+                sameSite: "None",
         });
         
         res.status(201).json({
@@ -82,6 +84,8 @@ router.post('/login' , async(req, res) => {
             "token" , token , {
                 httpOnly: true,
                 maxAge: 7 * 24 * 60 * 60 * 1000,
+                secure: true,             // ✅ only on HTTPS (Render uses HTTPS)
+                sameSite: "None",
         });
         res.status(200).json({
             message: "login successful",
@@ -118,6 +122,8 @@ router.post('/logout' , authMiddleware , async (req, res) => {
     try {
         res.clearCookie("token", {
         httpOnly: true,
+        secure: true,
+        sameSite: "None",
   });
   res.status(200).json({ message: "User logged out successfully" });
     } catch (error) {
