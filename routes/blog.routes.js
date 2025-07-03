@@ -1,14 +1,22 @@
 import express, { Router } from 'express';
 import Blog from '../model/blog.schema.js';
+import authMiddleware from '../middleware/Auth.js';
 // import blog from '../model/blog.schema';
 
 
 const router = express.Router();
+console.log("📁 blog.route.js loaded");
+
+router.get('/test', (req, res) => {
+  res.send("✅ App is receiving new routes");
+});
 
 //Find all blogs
 router.get('/', async(req , res) => {
     try{
-        const blogs = await Blog.find().populate('author' , 'name , email');
+        const blogs = await Blog.find().populate('author' , 'name , email').sort({
+            createdAt: -1
+        });
         res.json(blogs);
     }
     catch(err){
@@ -17,21 +25,29 @@ router.get('/', async(req , res) => {
 })
 
 //Create new blog
-router.post('/' , async(req, res) => {
+router.post('/' , authMiddleware , async(req, res) => {
     const {content , title} = req.body;
     if(!title || !content){
         return res.status(400).json({
             error: "Title and content are required"
         })
     }
+    
     try{
         const newBlog = new Blog({
             title,
-            content
+            content,
+            author: req.user._id
         })
-        await newBlog.save();
-        res.status(201).json(newBlog);
+        
+    await newBlog.save();
+
+    res.status(201).json({
+        message: "Blog saved",
+        blog: newBlog
+    });
     }
+
     catch(err){
         res.status(500).json({
             error: `Faild to create blog [${err}]`
@@ -41,8 +57,27 @@ router.post('/' , async(req, res) => {
 
 })
 
+
+// user specific blog
+router.get('/my-blogs' , authMiddleware, async (req, res) => {
+    console.log("route entered");
+    try {
+         console.log("User ID:", req.user._id);
+        const blogs = await Blog.find({
+        author: req.user._id
+        })
+           console.log("Blogs found:", blogs);
+        return res.status(200).json(blogs);
+    } catch (error) {
+        return res.status(501).json({
+            error: "Can't find blogs"
+        })
+    }
+})
+
+
 //Fetch single blog
-router.get('/:id' , async(req, res,) => {
+router.get('/:id' ,  async(req, res,) => {
     try{
         const blog = await Blog.findById(req.params.id);
         if(!blog){
@@ -63,15 +98,21 @@ router.get('/:id' , async(req, res,) => {
 })
 
 //Delete a blog
-router.delete('/:id' , async(req, res,) => {
+router.delete('/:id' , authMiddleware , async(req, res,) => {
     try {
-        const blog = await Blog.findByIdAndDelete(req.params.id);
+        const blog = await Blog.findById(req.params.id);
         if(!blog){
             return res.status(404).json({
                 error: "blog can't be fetched"
             })
         }
         else{
+            if(blog.author.toString() !== req.user._id.toString()){
+                return res.status(403).json({
+                    error: "unauthorized access"
+                })
+            }
+            await blog.deleteOne();
             res.json({
                 message: "Blog deleted",
                 id: req.params.id
@@ -86,24 +127,30 @@ router.delete('/:id' , async(req, res,) => {
 
 //Edit blog
 
-router.put('/:id' ,async(req ,res) => {
+router.put('/:id' , authMiddleware ,async(req ,res) => {
     const {title , content} = req.body;
     try {
-        const updatedBlog = await Blog.findByIdAndUpdate(
-            req.params.id,
-            {title , content},
-            {new: true}
+        const blog = await Blog.findById(
+            req.params.id
         )
 
-        if(!updatedBlog){
+        if(!blog){
             return res.status(404).json({
             error: "Blog can't be fetched"
         })
         }
+        if(blog.author.toString() !== req.user._id.toString()){
+            return res.status(403).json({
+                error : "Unauthorized access"
+            })
+        }
+        blog.title = title
+        blog.content = content
+        await blog.save();
         res.status(200)
         .json({
             message: "Blog updated successfully",
-            blog: updatedBlog
+            blog: blog
         })
         
     } catch (error) {
