@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
     
 })
 
-app.get('/loaderio-ed392aaaf49b37a5018b548ffa655995.txt', (req, res) => {
-  res.send('loaderio-ed392aaaf49b37a5018b548ffa655995');
+app.get('/loaderio-97c0674a53f5902209884eb53e717fcb.txt', (req, res) => {
+  res.send('loaderio-97c0674a53f5902209884eb53e717fcb');
 });
 
