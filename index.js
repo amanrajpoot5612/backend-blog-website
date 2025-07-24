@@ -40,3 +40,7 @@ app.get('/', (req, res) => {
     
 })
 
+app.get('/loaderio-ed392aaaf49b37a5018b548ffa655995.txt', (req, res) => {
+  res.send('loaderio-ed392aaaf49b37a5018b548ffa655995');
+});
+
